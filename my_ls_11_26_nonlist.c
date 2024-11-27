@@ -1,3 +1,5 @@
+// 添加了 optable 获取参数信息
+
 #include<stdio.h>
 #include<sys/stat.h>
 #include<string.h>

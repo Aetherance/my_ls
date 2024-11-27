@@ -1,3 +1,5 @@
+// 已弃用的链表
+
 #include<stdio.h>
 #include<sys/stat.h>
 #include<string.h>
