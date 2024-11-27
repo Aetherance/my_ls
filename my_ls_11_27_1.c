@@ -1,4 +1,4 @@
-// 实现-t 实现了所有参数的自由组合
+// 实现-t和-r 实现了所有参数的自由组合
 
 #include<stdio.h>
 #include<sys/stat.h>
@@ -91,8 +91,10 @@ int main(int argc,char **argv)
         all_name_count++;
         cur++;
     }
-    
 
+    // -r
+    
+    int isr = optable['r'] ? -1 : 1 ;
 
     // sort
 
@@ -103,25 +105,25 @@ int main(int argc,char **argv)
         if(*(pos->rdirent->d_name)=='.'&&(*(pos->rdirent->d_name+1)!='.'&&*(pos->rdirent->d_name+1)!='\0'))
         {
             if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)>0)
-                return 1;
+                return 1 * isr;
             if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)<0)
-                return -1;
+                return -1 * isr;
             return 0;
         }
         if(*(aftpos->rdirent->d_name)=='.'&&(*(aftpos->rdirent->d_name+1)!='.'&&*(aftpos->rdirent->d_name+1)!='\0'))
         {
             if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-                return 1;
+                return 1 * isr;
             if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-                return -1;
+                return -1 * isr;
             return 0;
         } 
         
         
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-            return 1;
+            return 1 * isr;
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-            return -1;
+            return -1 * isr;
         return 0;
     }
     
@@ -129,9 +131,9 @@ int main(int argc,char **argv)
     {
         struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
         if(pos->buf__stat.st_ctime<aftpos->buf__stat.st_ctime)
-            return 1;
+            return 1 * isr;
         if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
-            return -1;
+            return -1 * isr;
         return 0;
 
     }
