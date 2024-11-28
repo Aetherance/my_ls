@@ -271,7 +271,19 @@ int main(int argc,char **argv)
         else
         {
             temp_line_len += strlen(readifm->rdirent->d_name)+2;
-            PrintList();
+            temp_line_len += strlen(readifm->rdirent->d_name)+2;
+            if(S_ISREG(readifm->buf__stat.st_mode)
+            &&!(readifm->buf__stat.st_mode & S_IXUSR))
+                printf("%-*s",max_len,readifm->rdirent->d_name);
+            
+            if(S_ISREG(readifm->buf__stat.st_mode)
+            &&(readifm->buf__stat.st_mode & S_IXUSR))
+                printf("\033[1;32m%-*s\033[0m",max_len,readifm->rdirent->d_name);
+            
+            if(S_ISDIR(readifm->buf__stat.st_mode))
+                printf("\033[1;34m%-*s\033[0m",max_len,readifm->rdirent->d_name);
+            
+            printf(" ");
         }
         
         line_print_now ++;
