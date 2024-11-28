@@ -75,7 +75,6 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
     if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
         return -1 * order;
     return 0;
-
 }
 
 int main(int argc,char **argv)
@@ -119,8 +118,6 @@ int main(int argc,char **argv)
         static struct ifm ifmlist[LIST_SIZE];// list
         struct ifm * cur = ifmlist,*end;
         
-
-
         int all_name_count = 0;
         int total_name_len = 0;
         int temp_line_len = 0;
