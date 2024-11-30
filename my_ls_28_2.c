@@ -13,10 +13,10 @@
 #include<grp.h>
 #include<time.h>
 
-#define LIST_SIZE 2097152
-#define PATH_SIZE 1000
-#define FILE_PATH_SIZE 128
-#define FILE_COUNT_MAX 25565
+#define LIST_SIZE 2097
+#define PATH_SIZE 4048
+#define FILE_PATH_SIZE 2048
+#define FILE_COUNT_MAX 2560
 
 #define OPT__a_ 'a'
 #define OPT__l_ 'l'
@@ -35,12 +35,15 @@ struct ifm
     struct stat buf__stat;
 };
 
+
+
 int opt_count_sum = 0;
 int opt;    // temp
 char optTable[256] = {};  // 01 table
 char filepath[FILE_COUNT_MAX][FILE_PATH_SIZE] = {"."};
 int FileNameCount = 1;
 int FileNameRead = 0;
+char fatherPath[10000];
 
 // sort
 int order = 1;
@@ -79,6 +82,8 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
 
 int main(int argc,char **argv)
 {   
+    //optTable[OPT__R_] = 1;
+    strcpy(fatherPath,filepath[0]);
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
@@ -101,7 +106,7 @@ int main(int argc,char **argv)
 
     while (FileNameRead<FileNameCount)
     {
-        if(FileNameCount>1)
+        if(FileNameCount>1||optTable[OPT__R_])
             printf("%s:\n",filepath[FileNameRead]);
         // open
         DIR * dir = opendir(filepath[FileNameRead]);
@@ -112,6 +117,11 @@ int main(int argc,char **argv)
         if(dir == NULL)
         {
             printf("ls: 无法访问 '%s': 没有那个文件或目录\n",filepath[FileNameRead]);
+            if(optTable[OPT__R_])
+            {
+                FileNameRead ++;
+                continue;
+            }
             return 1;
         }
         
@@ -160,7 +170,6 @@ int main(int argc,char **argv)
             cur++;
         }
 
-
         // -r
         order = optTable[OPT__r_] ? -1 : 1 ;
         
@@ -200,6 +209,7 @@ int main(int argc,char **argv)
 
         void PrintList()
         {
+
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&!(readifm->buf__stat.st_mode & S_IXUSR))
                 printf("%s",readifm->rdirent->d_name);
@@ -211,11 +221,14 @@ int main(int argc,char **argv)
             if(S_ISDIR(readifm->buf__stat.st_mode))
                 printf("\033[1;34m%s\033[0m",readifm->rdirent->d_name);
                 
+            if(S_ISLNK(readifm->buf__stat.st_mode))
+                printf("\033[1;44m%s\033[0m",readifm->rdirent->d_name);
+                
                 printf("  ");
         }
 
             // 输出格式
-            if(!optTable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
+            if(!optTable[OPT__l_]&&line_print_now == ((all_name_count/divide_count-1))/(optTable[OPT__R_]?2:1))
             {
                 printf("\b\b");
                 printf("\n");
@@ -271,7 +284,7 @@ int main(int argc,char **argv)
 
                 printf("\n");
             }
-            else if(total_name_len<=win.ws_col)
+            else if(!optTable[OPT__R_]&&total_name_len<=win.ws_col)
             {
                 PrintList();
             }
@@ -279,6 +292,9 @@ int main(int argc,char **argv)
             {
                 temp_line_len += strlen(readifm->rdirent->d_name)+2;
                 temp_line_len += strlen(readifm->rdirent->d_name)+2;
+                if((readifm->buf__stat.st_mode & __S_IFLNK))
+                    printf("%-*s",max_len,readifm->rdirent->d_name);
+
                 if(S_ISREG(readifm->buf__stat.st_mode)
                 &&!(readifm->buf__stat.st_mode & S_IXUSR))
                     printf("%-*s",max_len,readifm->rdirent->d_name);
@@ -300,6 +316,28 @@ int main(int argc,char **argv)
         if(!optTable[OPT__l_])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
+        
+        if(optTable[OPT__R_])
+        {
+            if(FileNameCount<400){
+                strcpy(fatherPath,filepath[0]);
+                for(struct ifm * RfileNameRead = ifmlist;RfileNameRead<readifm;RfileNameRead++)
+                {
+                    if(S_ISDIR(RfileNameRead->buf__stat.st_mode)&&*RfileNameRead->rdirent->d_name!='.')
+                    {
+                        sprintf(filepath[FileNameCount++],"%s/%s",fatherPath,RfileNameRead->rdirent->d_name);
+                    }
+                }
+            }
+            for(int i = 1;i<FileNameCount;i++)
+            {
+                strcpy(filepath[i-1],filepath[i]);
+            }
+            //strcpy(fatherPath,filepath[0]);
+
+            FileNameCount--;
+            FileNameRead = 0;
+        }
     }
     return  0;
 }
