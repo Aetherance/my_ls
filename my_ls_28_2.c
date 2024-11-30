@@ -35,7 +35,11 @@ struct ifm
     struct stat buf__stat;
 };
 
-
+struct fpath
+{
+    char * path;
+    struct fpath * next;
+};
 
 int opt_count_sum = 0;
 int opt;    // temp
