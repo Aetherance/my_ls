@@ -10,6 +10,7 @@
 #include<pwd.h>
 #include<grp.h>
 #include<time.h>
+#include<locale.h>
 
 #define LIST_SIZE 20970
 #define PATH_SIZE 4048
@@ -46,15 +47,14 @@ int order = 1;
 
 void R();
 
-
 int sort_init(const void * ptr1, const void * ptr2);
 int sort_by_change_time(const void * ptr1, const void * ptr2);
 void PrintList(struct ifm * readifm);
 void PrintWithL(struct ifm *readifm);
 
 int main(int argc,char **argv)
-{   
-    filepath = (char **)malloc(800);
+{
+    filepath = (char **)malloc(80);
     filepath[0] = (char *)malloc(64);
     strcpy(filepath[0],".");
 
@@ -90,7 +90,7 @@ int main(int argc,char **argv)
     }
 
     order = optTable[OPT__R] ? -1 : 1 ;
-    // RRRRRRRRRRRRRRRRRRRRRRRR
+
     if(optTable[OPT_RR])
     {
         for(int i = 0;i<FileNameCount;i++)
@@ -172,7 +172,6 @@ int main(int argc,char **argv)
         closedir(dir);
 
         // get_sort_mode
-
         FP sort_mode = sort_init;
         if(optTable[OPT__T])sort_mode = sort_by_change_time;
         qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
@@ -219,13 +218,14 @@ int main(int argc,char **argv)
             {
                 PrintWithL(readifm);
                 PrintList(readifm);
-
                 printf("\n");
             }
+
             else if(!optTable[OPT_RR]&&total_name_len<=win.ws_col)
             {
                 PrintList(readifm);
             }
+
             else
             {
                 temp_line_len += strlen(readifm->rdirent.d_name)+2;
@@ -292,7 +292,6 @@ void R(char * Rfile)
         {
             printf("%lu ",Rlist[i].rdirent.d_ino);
         }
-
         if(optTable[OPT__S])
         {
             printf("%2lu ",Rlist[i].buf__stat.st_blocks/2);     // why
@@ -301,7 +300,6 @@ void R(char * Rfile)
         {
             PrintWithL(&Rlist[i]);
         }
-
         if(S_ISDIR(Rlist[i].buf__stat.st_mode))
         {
             printf("\033[1;5;34m""%s\n\033[0m",Rlist[i].rdirent.d_name);
@@ -340,7 +338,13 @@ void R(char * Rfile)
             {
                 continue;
             }
-            
+
+            if(!optTable[OPT__A])
+            {
+                if(*Rlist[i].rdirent.d_name=='.')
+                    continue;
+            }
+
             R(go);
         }
     }
@@ -352,23 +356,8 @@ void R(char * Rfile)
 int sort_init(const void * ptr1, const void * ptr2)
 {
     struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
-    
-    if(*(pos->rdirent.d_name)=='.'||(*(aftpos->rdirent.d_name)=='.'&&*(pos->rdirent.d_name+1)!='\0'))
-    {
-        if(strstr(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1)!=NULL)
-            return 1 * order;
-        if(strstr(aftpos->rdirent.d_name+1,pos->rdirent.d_name+1)!=NULL)
-            return -1 * order;
-        
-        return strcmp(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1) * order; 
-    }
-    // 如果前面的部分一样，把长的排在后面
-    if(strstr(pos->rdirent.d_name,aftpos->rdirent.d_name)!=NULL)
-        return 1 * order;
-    if(strstr(aftpos->rdirent.d_name,pos->rdirent.d_name)!=NULL)
-        return -1 * order;
-
-    return strcmp(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
+    setlocale(LC_COLLATE,"");
+    return strcoll(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
 }
 
 int sort_by_change_time(const void * ptr1, const void * ptr2)
